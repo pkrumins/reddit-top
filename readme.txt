@@ -34,11 +34,15 @@ displays them in the console via ncurses.
 The program is written in Python programming language and is supposed to
 be run on Unix type operating systems, such as Linux.
 
-It uses one external Python module:
+If you are using Python older than 2.6, it will require one external Python
+module:
 
     * simplejson - for parsing the reddit stories.
     It can be installed via `easy_install simplejson` command or can be
     downloaded from http://undefined.org/python/#simplejson
+
+Python 2.6 has json in the standard library, so it should work out of the box.
+
 
 See my original article for a screenshot:
 

@@ -16,7 +16,11 @@ import time
 import socket
 import urllib2
 import datetime
-import simplejson as json
+
+try:
+ import json
+except:
+ import simplejson as json
 
 version = "1.0"
 
