@@ -1,8 +1,0 @@
-pyredditstories.py
-reddit_top
-setup.py
-reddit_top.egg-info/PKG-INFO
-reddit_top.egg-info/SOURCES.txt
-reddit_top.egg-info/dependency_links.txt
-reddit_top.egg-info/not-zip-safe
-reddit_top.egg-info/top_level.txt
