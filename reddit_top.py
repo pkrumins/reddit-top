@@ -24,6 +24,7 @@ import struct
 import termios
 import datetime
 import threading
+import webbrowser
 from htmlentitydefs import entitydefs
 from pyredditstories import get_stories, RedesignError, SeriousError, stories_per_page
 
@@ -495,6 +496,10 @@ class Interface(object):
                         self.pages -= 1
                         self.pages_changed = False
                         retr_queue_in.put(ChangePages(self.pages))
+            return
+        elif char == ord('o'):
+            # Open topmost story in webbrrowser (new window)
+            webbrowser.open_new(self.stories[self.start_pos].url)
             return
         elif char == ord('m'):
             # Change display mode
