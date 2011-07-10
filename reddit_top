@@ -200,6 +200,8 @@ class DisplayMode(object):
                 self.do_display(story)
             except IndexError:
                 break
+            except curses.error:
+                continue
 
         self.interface.body_win.refresh()
 
@@ -463,8 +465,8 @@ class Interface(object):
                 action.do(self)
             except KeyboardInterrupt:
                 break
-            except curses.error, e:
-                raise ProgError, "Curses Error: %s" % e
+            #except curses.error, e:
+                #raise ProgError, "Curses Error: %s" % e
 
     def handle_keystroke(self, char):
         if char == ord('q'):
