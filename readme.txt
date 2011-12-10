@@ -56,6 +56,7 @@ Usage: ./reddit_top.py [-h|--help] - displays help message
 Usage: ./reddit_top.py [-s|--subreddit subreddit]
                        [-i|--interval interval]
                        [-u|--utf8 <on|off>]
+                       [-U|--url <on|off>]
                        [-n|--new]
 
     -s or --subreddit specifies which subreddit to monitor.
@@ -70,6 +71,9 @@ Usage: ./reddit_top.py [-s|--subreddit subreddit]
     -u or --utf8 turns on utf8 output mode.
     Default: off. Use this if you know for sure that your
     terminal supports it, otherwise your terminal might turn into garbage.
+
+    -U or --url turns on printing of urls.
+    Default: off
 
     -n or --new follows only the newest (just submitted) reddit stories.
     Default: follow front page stories.
