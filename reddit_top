@@ -650,7 +650,7 @@ def parse_args(args):
         elif opt in ("-s", "--subreddit"):
             return_args['subreddit'] = val
         elif opt in ("-u", "--utf8"):
-            return_args['urf8'] = True
+            return_args['utf8'] = True
         elif opt in ("-n", "--new"):
             return_args['new'] = True
         else:
