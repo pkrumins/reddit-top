@@ -24,6 +24,7 @@ import struct
 import termios
 import datetime
 import threading
+import webbrowser
 from htmlentitydefs import entitydefs
 from pyredditstories import get_stories, RedesignError, SeriousError, stories_per_page
 
@@ -42,6 +43,9 @@ default_interval = '1m'
 # Is the terminal capable of outputting utf8? (this is the default value)
 # Change with -u|--utf command option
 default_can_utf8 = False
+
+# Do we want to show urls
+default_show_url = False
 
 # Monitor new stories?
 default_new = False
@@ -199,6 +203,8 @@ class DisplayMode(object):
                 self.do_display(story)
             except IndexError:
                 break
+            except curses.error:
+                continue
 
         self.interface.body_win.refresh()
 
@@ -212,7 +218,19 @@ class BasicDisplay(DisplayMode):
     def do_display(self, story):
         title_line = self.format_title(story)
         self.display_title(title_line)
+        if interface.show_url:
+            self.display_url(story)
         self.display_info(story)
+
+    def display_url(self, story):
+        url = html_unescape(story.url)
+        if len(url) > (self.interface.body_max_x - 4):
+            url = url[:self.interface.body_max_x-8] + "..."
+        if not interface.can_utf8:
+            url = story.url.decode('utf8').encode('ascii', 'replace')
+        self.interface.body_win.addstr("    ")
+        self.interface.body_win.addstr(url[:4])
+        self.interface.body_win.addstr(url[4:] + "\n")
 
     def display_title(self, title_line):
         self.interface.body_win.addstr(title_line[:4])
@@ -347,6 +365,7 @@ class Interface(object):
     def __init__(self, args):
         self.update_secs = Interval(args['interval']).to_secs()
         self.can_utf8 = args['utf8']
+        self.show_url = args['url']
         self.new = args['new']
         self.subreddit = args['subreddit']
         self.pages_changed = True
@@ -365,11 +384,17 @@ class Interface(object):
         except:
             pass
 
-        curses.init_pair(1, curses.COLOR_CYAN, curses.COLOR_BLACK)
-        curses.init_pair(2, curses.COLOR_WHITE, curses.COLOR_BLACK)
-        curses.init_pair(3, curses.COLOR_GREEN, curses.COLOR_BLACK)
-        curses.init_pair(4, curses.COLOR_YELLOW, curses.COLOR_BLACK)
-        curses.init_pair(5, curses.COLOR_RED, curses.COLOR_BLACK)
+        try:
+            curses.use_default_colors()
+            bgcolor = -1
+        except:
+            bgcolor = curses.COLOR_BLACK
+
+        curses.init_pair(1, curses.COLOR_CYAN, bgcolor)
+        curses.init_pair(2, curses.COLOR_WHITE, bgcolor)
+        curses.init_pair(3, curses.COLOR_GREEN, bgcolor)
+        curses.init_pair(4, curses.COLOR_YELLOW, bgcolor)
+        curses.init_pair(5, curses.COLOR_RED, bgcolor)
 
         self.max_y, self.max_x = stdscr.getmaxyx()
 
@@ -456,8 +481,8 @@ class Interface(object):
                 action.do(self)
             except KeyboardInterrupt:
                 break
-            except curses.error, e:
-                raise ProgError, "Curses Error: %s" % e
+            #except curses.error, e:
+                #raise ProgError, "Curses Error: %s" % e
 
     def handle_keystroke(self, char):
         if char == ord('q'):
@@ -489,6 +514,10 @@ class Interface(object):
                         self.pages -= 1
                         self.pages_changed = False
                         retr_queue_in.put(ChangePages(self.pages))
+            return
+        elif char == ord('o'):
+            # Open topmost story in webbrrowser (new window)
+            webbrowser.open_new(self.stories[self.start_pos].url)
             return
         elif char == ord('m'):
             # Change display mode
@@ -614,7 +643,7 @@ def parse_args(args):
     ps. i don't like optparse. """
 
     try:
-        opts = getopt.getopt(args, "s:i:unh", ['subreddit=', 'interval=', 'utf8', 'new', 'help'])[0]
+        opts = getopt.getopt(args, "s:i:uUnh", ['subreddit=', 'interval=', 'utf8', 'url', 'new', 'help'])[0]
     except getopt.GetoptError, e:
         raise ArgError, str(e)
 
@@ -622,6 +651,7 @@ def parse_args(args):
         'subreddit': default_subreddit,
         'interval': default_interval,
         'utf8': default_can_utf8,
+        'url': default_show_url,
         'new': default_new
     }
 
@@ -637,7 +667,9 @@ def parse_args(args):
         elif opt in ("-s", "--subreddit"):
             return_args['subreddit'] = val
         elif opt in ("-u", "--utf8"):
-            return_args['urf8'] = True
+            return_args['utf8'] = True
+        elif opt in ("-U", "--url"):
+            return_args['url'] = True
         elif opt in ("-n", "--new"):
             return_args['new'] = True
         else:
@@ -659,7 +691,7 @@ def print_head():
 def print_usage():
     print "Usage: %s [-h|--help] - displays this" % sys.argv[0]
     print "Usage: %s [-s|--subreddit subreddit] [-i|--interval interval]" % sys.argv[0]
-    print "          [-n|--new] [-u|--utf8 <on|off>]"
+    print "          [-n|--new] [-u|--utf8 <on|off>] [-U|--url <on|off>]"
     print
     print "-s|--subreddit specifies the subreddit to monitor,"
     print " 'front_page' is a special value which monitors reddit.com front page,"
@@ -670,6 +702,7 @@ def print_usage():
     print " Default: %s" % default_interval
     print "-u|--utf8 turns on utf8 output mode. Use this if you know for sure that"
     print " your terminal supports it. Default: %s" % str(default_can_utf8)
+    print "-U|--url print url. Default: %s" % str(default_show_url)
     print "-n|--new specifies that new stories only should be monitored"
     print " Default: %s" % default_new
 
